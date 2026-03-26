@@ -1,0 +1,161 @@
+/* ===== Loader ===== */
+.loader-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.loader-card {
+  text-align: center;
+  padding: 48px 40px;
+  max-width: 500px;
+  width: 100%;
+}
+
+/* ===== Brain Animation ===== */
+.loader-visual {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.brain-pulse {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brain-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--accent-primary);
+  opacity: 0;
+  animation: ringPulse 3s ease-in-out infinite;
+}
+
+.ring-1 {
+  width: 60px;
+  height: 60px;
+  animation-delay: 0s;
+}
+
+.ring-2 {
+  width: 80px;
+  height: 80px;
+  animation-delay: 0.5s;
+}
+
+.ring-3 {
+  width: 100px;
+  height: 100px;
+  animation-delay: 1s;
+}
+
+@keyframes ringPulse {
+  0% { opacity: 0.6; transform: scale(0.8); }
+  50% { opacity: 0.2; transform: scale(1.1); }
+  100% { opacity: 0.6; transform: scale(0.8); }
+}
+
+.brain-core {
+  width: 48px;
+  height: 48px;
+  background: var(--accent-gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 1;
+  animation: coreGlow 2s ease-in-out infinite;
+}
+
+@keyframes coreGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
+  50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.7); }
+}
+
+/* ===== Text ===== */
+.loader-title {
+  margin-bottom: 8px;
+}
+
+.loader-subtitle {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 32px;
+}
+
+/* ===== Steps ===== */
+.loader-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  margin-bottom: 28px;
+}
+
+.loader-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  opacity: 0.3;
+  animation: stepActivate 14s ease-in-out infinite;
+}
+
+@keyframes stepActivate {
+  0%, 10% { opacity: 0.3; color: var(--text-muted); }
+  12%, 20% { opacity: 1; color: var(--accent-secondary); }
+  22%, 100% { opacity: 0.5; color: var(--text-secondary); }
+}
+
+.step-indicator {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: all var(--transition-base);
+}
+
+.loader-step:nth-child(1) { animation-delay: 0s; }
+.loader-step:nth-child(2) { animation-delay: 2s; }
+.loader-step:nth-child(3) { animation-delay: 4s; }
+.loader-step:nth-child(4) { animation-delay: 6s; }
+.loader-step:nth-child(5) { animation-delay: 8s; }
+.loader-step:nth-child(6) { animation-delay: 10s; }
+.loader-step:nth-child(7) { animation-delay: 12s; }
+
+/* ===== Progress Bar ===== */
+.loader-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.loader-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent-gradient);
+  animation: progressFill 30s linear forwards;
+}
+
+@keyframes progressFill {
+  from { width: 0%; }
+  to { width: 95%; }
+}
