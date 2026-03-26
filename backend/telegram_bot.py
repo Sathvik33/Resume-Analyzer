@@ -47,28 +47,78 @@ def send_welcome(message):
 
 import docx
 
+def process_analysis(chat_id, session):
+    bot.send_message(chat_id, "🧠 Let me analyze your resume against this job description. This usually takes around 30 seconds... ⏳")
+    
+    # Run async analysis sync wrapper
+    try:
+        results = asyncio.run(analyze_resume(session["jd_text"], session["resume_text"]))
+        session["analysis"] = results
+        
+        def clean_md(t):
+            if not t: return ""
+            return str(t).replace('*', '').replace('_', '').replace('`', '').replace('[', '').replace(']', '')
+
+        def format_gap(g):
+            if isinstance(g, dict):
+                g_type = str(g.get('type', 'Gap')).replace('_', ' ').title()
+                g_desc = g.get('description', '')
+                return f"❌ *{clean_md(g_type)}:* {clean_md(g_desc)}"
+            return f"❌ {clean_md(g)}"
+
+        # Format results for Telegram
+        score = results.get('match_score', 0)
+        score_emoji = "🟢" if score >= 70 else ("🟡" if score >= 40 else "🔴")
+        
+        summary = clean_md(results.get('summary', ''))
+        gaps = "\n".join([format_gap(g) for g in results.get('gap_analysis', [])]) or "✅ No missing skills!"
+        
+        neg_list = results.get('negative_points', [])
+        weaknesses = "\n\n".join([f"⚠️ *{clean_md(n.get('issue', ''))}*\n💡 Fix: {clean_md(n.get('recommendation', ''))}" for n in neg_list[:3]]) or "✅ No major weaknesses!"
+
+        report = (
+            f"📊 *ANALYSIS COMPLETE*\n\n"
+            f"*Match Score:* {score_emoji} {score}/100\n\n"
+            f"*Summary:*\n{summary}\n\n"
+            f"*Missing Skills:*\n{gaps}\n\n"
+            f"*Key Weaknesses:*\n{weaknesses}"
+        )
+        
+        bot.send_message(chat_id, report, parse_mode="Markdown")
+
+        # Setup Yes/No Keyboard
+        markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add(KeyboardButton("Yes, write me a CV!"), KeyboardButton("No thanks"))
+        
+        session["step"] = STEP_ASK_GENERATE
+        bot.send_message(chat_id, "✨ Do you want me to write a **new, optimized CV** completely tailored for this job using the STAR method?", reply_markup=markup, parse_mode="Markdown")
+
+    except Exception as e:
+        logger.error(f"Analysis failed: {e}")
+        bot.send_message(chat_id, "❌ Sorry, the analysis engine encountered an error. Please try again later.")
+
 @bot.message_handler(content_types=['document'])
 def handle_docs(message):
     chat_id = message.chat.id
     session = get_session(chat_id)
 
-    if session["step"] != STEP_UPLOAD_RESUME:
+    if session["step"] not in [STEP_UPLOAD_RESUME, STEP_PASTE_JD]:
         bot.send_message(chat_id, "I wasn't expecting a file right now. Use /reset if you want to start over.")
         return
 
     try:
         file_name = message.document.file_name.lower()
         if not (file_name.endswith('.pdf') or file_name.endswith('.doc') or file_name.endswith('.docx')):
-            bot.send_message(chat_id, "⚠️ **Format not allowed!**\n\nPlease upload your resume strictly in **PDF** (`.pdf`) or **Word** (`.docx` / `.doc`) format.", parse_mode="Markdown")
+            bot.send_message(chat_id, "⚠️ **Format not allowed!**\n\nPlease upload your document strictly in **PDF** (`.pdf`) or **Word** (`.docx` / `.doc`) format.", parse_mode="Markdown")
             return
 
-        bot.send_message(chat_id, "📥 Downloading and extracting resume... Please wait.")
+        bot.send_message(chat_id, "📥 Downloading and extracting document... Please wait.")
         
         # Download file
         file_info = bot.get_file(message.document.file_id)
         downloaded_file = bot.download_file(file_info.file_path)
         
-        resume_text = ""
+        extracted_text = ""
         
         # Extract based on file type
         if file_name.endswith('.pdf'):
@@ -76,27 +126,32 @@ def handle_docs(message):
                 for page in pdf.pages:
                     text = page.extract_text()
                     if text:
-                        resume_text += text + "\n"
+                        extracted_text += text + "\n"
         elif file_name.endswith('.docx') or file_name.endswith('.doc'):
             doc = docx.Document(io.BytesIO(downloaded_file))
-            resume_text = "\n".join([para.text for para in doc.paragraphs])
+            extracted_text = "\n".join([para.text for para in doc.paragraphs])
         
-        if not resume_text.strip():
+        if not extracted_text.strip():
             bot.send_message(chat_id, "⚠️ Could not extract text from this file. Please try a different one.")
             return
 
-        session["resume_text"] = resume_text.strip()
-        session["step"] = STEP_PASTE_JD
-        
-        bot.send_message(
-            chat_id, 
-            "✅ **Resume processed successfully!**\n\n"
-            "Now, please paste the **Job Description (JD)** you are targeting.",
-            parse_mode="Markdown"
-        )
+        if session["step"] == STEP_UPLOAD_RESUME:
+            session["resume_text"] = extracted_text.strip()
+            session["step"] = STEP_PASTE_JD
+            bot.send_message(
+                chat_id, 
+                "✅ **Resume processed successfully!**\n\n"
+                "Now, please paste the **Job Description (JD)** you are targeting, or **upload it as a PDF or Word file**.",
+                parse_mode="Markdown"
+            )
+        elif session["step"] == STEP_PASTE_JD:
+            session["jd_text"] = extracted_text.strip()
+            bot.send_message(chat_id, "✅ **Job Description processed successfully!**", parse_mode="Markdown")
+            process_analysis(chat_id, session)
+
     except Exception as e:
-        logger.error(f"Error processing PDF: {e}")
-        bot.send_message(chat_id, "❌ Error processing the PDF file. Please try again.")
+        logger.error(f"Error processing document: {e}")
+        bot.send_message(chat_id, "❌ Error processing the file. Please try again.")
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def handle_text(message):
@@ -105,57 +160,16 @@ def handle_text(message):
     text = message.text.strip()
 
     if session["step"] == STEP_UPLOAD_RESUME:
-        bot.send_message(chat_id, "Please upload your **Resume (PDF)** first. Send /reset to start over.", parse_mode="Markdown")
+        bot.send_message(chat_id, "Please upload your **Resume (PDF/Word)** first. Send /reset to start over.", parse_mode="Markdown")
         return
 
     if session["step"] == STEP_PASTE_JD:
         if len(text) < 50:
-            bot.send_message(chat_id, "⚠️ That looks too short to be a Job Description. Please paste the full JD.")
+            bot.send_message(chat_id, "⚠️ That looks too short to be a Job Description. Please paste the full JD or upload a file.")
             return
 
         session["jd_text"] = text
-        bot.send_message(chat_id, "🧠 Let me analyze your resume against this job description. This usually takes around 30 seconds... ⏳")
-        
-        # Run async analysis sync wrapper
-        try:
-            results = asyncio.run(analyze_resume(session["jd_text"], session["resume_text"]))
-            session["analysis"] = results
-            
-            def clean_md(t):
-                if not t: return ""
-                return str(t).replace('*', '').replace('_', '').replace('`', '').replace('[', '').replace(']', '')
-
-            # Format results for Telegram
-            score = results.get('match_score', 0)
-            score_emoji = "🟢" if score >= 70 else ("🟡" if score >= 40 else "🔴")
-            
-            summary = clean_md(results.get('summary', ''))
-            gaps = "\n".join([f"❌ {clean_md(g)}" for g in results.get('gap_analysis', [])]) or "✅ No missing skills!"
-            
-            neg_list = results.get('negative_points', [])
-            weaknesses = "\n\n".join([f"⚠️ {clean_md(n.get('issue', ''))}\n💡 *Fix:* {clean_md(n.get('recommendation', ''))}" for n in neg_list[:3]]) or "✅ No major weaknesses!"
-
-            report = (
-                f"📊 *ANALYSIS COMPLETE*\n\n"
-                f"*Match Score:* {score_emoji} {score}/100\n\n"
-                f"*Summary:*\n{summary}\n\n"
-                f"*Missing Skills:*\n{gaps}\n\n"
-                f"*Key Weaknesses:*\n{weaknesses}"
-            )
-            
-            bot.send_message(chat_id, report, parse_mode="Markdown")
-
-            # Setup Yes/No Keyboard
-            markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-            markup.add(KeyboardButton("Yes, write me a CV!"), KeyboardButton("No thanks"))
-            
-            session["step"] = STEP_ASK_GENERATE
-            bot.send_message(chat_id, "✨ Do you want me to write a **new, optimized CV** completely tailored for this job using the STAR method?", reply_markup=markup, parse_mode="Markdown")
-
-        except Exception as e:
-            logger.error(f"Analysis failed: {e}")
-            bot.send_message(chat_id, "❌ Sorry, the analysis engine encountered an error. Please try again later.")
-            
+        process_analysis(chat_id, session)
         return
 
     if session["step"] == STEP_ASK_GENERATE:
