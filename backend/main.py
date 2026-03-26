@@ -4,12 +4,14 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pdfplumber
 
 from analyzer import analyze_resume
 from cv_generator import generate_cv
+from pdf_generator import markdown_to_pdf
 
 app = FastAPI(title="AI Resume Analyzer", version="1.0.0")
 
@@ -32,6 +34,10 @@ class GenerateCVRequest(BaseModel):
     jd_text: str
     resume_text: str
     analysis_results: dict
+
+
+class DownloadPDFRequest(BaseModel):
+    cv_markdown: str
 
 
 @app.get("/api/health")
@@ -99,6 +105,24 @@ async def generate_cv_endpoint(request: GenerateCVRequest):
         logging.error(f"CV generation failed: {str(e)}")
         logging.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"CV generation failed: {str(e)}")
+
+
+@app.post("/api/download-cv-pdf")
+async def download_cv_pdf(request: DownloadPDFRequest):
+    if not request.cv_markdown.strip():
+        raise HTTPException(status_code=400, detail="CV content cannot be empty")
+
+    try:
+        pdf_bytes = markdown_to_pdf(request.cv_markdown)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": "attachment; filename=optimized_resume.pdf"}
+        )
+    except Exception as e:
+        logging.error(f"PDF generation failed: {str(e)}")
+        logging.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
 
 
 if __name__ == "__main__":
