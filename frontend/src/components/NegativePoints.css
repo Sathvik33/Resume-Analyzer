@@ -1,0 +1,171 @@
+/* ===== Negative Points ===== */
+.negative-points {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ===== Severity Summary ===== */
+.severity-summary {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.severity-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.severity-count {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.severity-label {
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+/* ===== Cards ===== */
+.np-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.np-card {
+  padding: 18px 20px;
+  border-left: 3px solid;
+  animation: slideUp 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.np-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.np-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.np-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.np-severity-tag {
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.np-section-tag {
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: var(--bg-glass);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+.np-issue {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+/* ===== Recommendation ===== */
+.np-recommendation {
+  padding: 12px 14px;
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.12);
+  border-radius: var(--radius-md);
+  margin-top: 4px;
+}
+
+.np-rec-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--success);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.np-rec-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ===== Irrelevant Sections ===== */
+.irrelevant-sections {
+  padding-top: 4px;
+}
+
+.irrelevant-sections .section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.irrelevant-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.irrelevant-tag {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+/* ===== No Issues ===== */
+.no-issues {
+  text-align: center;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.no-issues p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}

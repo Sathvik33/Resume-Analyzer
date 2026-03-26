@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './ScoreGauge.css'
 
-function ScoreGauge({ score, breakdown }) {
+function ScoreGauge({ score, scoreBreakdown, semanticSimilarity }) {
   const [animatedScore, setAnimatedScore] = useState(0)
   const radius = 80
   const circumference = 2 * Math.PI * radius
@@ -10,14 +10,12 @@ function ScoreGauge({ score, breakdown }) {
 
   useEffect(() => {
     let frame
-    let start = 0
     const duration = 1500
     const startTime = performance.now()
 
     const animate = (currentTime) => {
       const elapsed = currentTime - startTime
       const t = Math.min(elapsed / duration, 1)
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - t, 3)
       setAnimatedScore(Math.round(eased * score))
 
@@ -47,10 +45,26 @@ function ScoreGauge({ score, breakdown }) {
   const color = getScoreColor(score)
 
   const breakdownItems = [
-    { label: 'Skill Match', weight: '40%', value: breakdown?.skill_match },
-    { label: 'Experience', weight: '30%', value: breakdown?.experience_match },
-    { label: 'Projects', weight: '20%', value: breakdown?.project_relevance },
-    { label: 'ATS Keywords', weight: '10%', value: breakdown?.keyword_match },
+    {
+      label: 'LLM Analysis Score',
+      value: scoreBreakdown?.llm_score || 0,
+      color: getScoreColor(scoreBreakdown?.llm_score || 0),
+    },
+    {
+      label: 'Semantic Similarity',
+      value: scoreBreakdown?.semantic_score || 0,
+      color: getScoreColor(scoreBreakdown?.semantic_score || 0),
+    },
+    {
+      label: 'Skill Match (Embeddings)',
+      value: semanticSimilarity?.skill_match || 0,
+      color: getScoreColor(semanticSimilarity?.skill_match || 0),
+    },
+    {
+      label: 'Overall Similarity',
+      value: semanticSimilarity?.overall || 0,
+      color: getScoreColor(semanticSimilarity?.overall || 0),
+    },
   ]
 
   return (
@@ -58,7 +72,6 @@ function ScoreGauge({ score, breakdown }) {
       {/* Circular Gauge */}
       <div className="gauge-wrapper">
         <svg className="gauge-svg" width="200" height="200" viewBox="0 0 200 200">
-          {/* Background circle */}
           <circle
             cx="100"
             cy="100"
@@ -67,7 +80,6 @@ function ScoreGauge({ score, breakdown }) {
             stroke="rgba(255,255,255,0.05)"
             strokeWidth="12"
           />
-          {/* Progress circle */}
           <circle
             cx="100"
             cy="100"
@@ -91,20 +103,27 @@ function ScoreGauge({ score, breakdown }) {
 
       <p className="score-verdict" style={{ color }}>{getScoreLabel(score)}</p>
 
+      {/* Blended Score Info */}
+      {scoreBreakdown && (
+        <p className="score-blend-info">
+          60% LLM Analysis + 40% Semantic Similarity
+        </p>
+      )}
+
       {/* Breakdown Bars */}
       <div className="score-breakdown">
         {breakdownItems.map((item, i) => (
           <div key={i} className="breakdown-item">
             <div className="breakdown-header">
               <span className="breakdown-label">{item.label}</span>
-              <span className="breakdown-weight">{item.weight}</span>
+              <span className="breakdown-value" style={{ color: item.color }}>{Math.round(item.value)}%</span>
             </div>
             <div className="breakdown-bar">
               <div
                 className="breakdown-fill"
                 style={{
-                  width: `${item.value || Math.round(score * (0.7 + Math.random() * 0.6))}%`,
-                  backgroundColor: color,
+                  width: `${item.value}%`,
+                  backgroundColor: item.color,
                   animationDelay: `${i * 200}ms`,
                 }}
               />
@@ -112,6 +131,25 @@ function ScoreGauge({ score, breakdown }) {
           </div>
         ))}
       </div>
+
+      {/* Semantic Stats */}
+      {semanticSimilarity && (
+        <div className="semantic-stats">
+          <div className="stat-item">
+            <span className="stat-value" style={{ color: 'var(--success)' }}>
+              {semanticSimilarity.matched_skills_count || 0}
+            </span>
+            <span className="stat-label">Skills Matched</span>
+          </div>
+          <div className="stat-divider"></div>
+          <div className="stat-item">
+            <span className="stat-value" style={{ color: 'var(--danger)' }}>
+              {semanticSimilarity.missing_skills_count || 0}
+            </span>
+            <span className="stat-label">Skills Missing</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

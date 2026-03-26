@@ -5,3 +5,6 @@ langchain-ollama
 ollama
 python-multipart
 pdfplumber
+sentence-transformers
+chromadb
+numpy

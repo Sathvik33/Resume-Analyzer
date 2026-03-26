@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import ScoreGauge from './ScoreGauge'
 import GapAnalysis from './GapAnalysis'
+import NegativePoints from './NegativePoints'
 import Improvements from './Improvements'
 import OptimizedBullets from './OptimizedBullets'
 import './ResultsDashboard.css'
@@ -11,6 +12,7 @@ function ResultsDashboard({ results }) {
   const tabs = [
     { key: 'score', label: 'Score', icon: '📊' },
     { key: 'gaps', label: 'Gap Analysis', icon: '🔍' },
+    { key: 'negatives', label: 'Weaknesses', icon: '⚠️' },
     { key: 'improve', label: 'Improvements', icon: '🚀' },
     { key: 'bullets', label: 'Optimized Resume', icon: '✨' },
   ]
@@ -68,7 +70,11 @@ function ResultsDashboard({ results }) {
 
         <div className="tab-content glass-card">
           {activeTab === 'score' && (
-            <ScoreGauge score={results.match_score} />
+            <ScoreGauge
+              score={results.match_score}
+              scoreBreakdown={results.score_breakdown}
+              semanticSimilarity={results.semantic_similarity}
+            />
           )}
 
           {activeTab === 'gaps' && (
@@ -76,6 +82,15 @@ function ResultsDashboard({ results }) {
               <GapAnalysis
                 gaps={results.gap_analysis}
                 resumeAnalysis={results.resume_analysis}
+              />
+            </div>
+          )}
+
+          {activeTab === 'negatives' && (
+            <div className="tab-panel">
+              <NegativePoints
+                negativePoints={results.negative_points}
+                irrelevantSections={results.resume_analysis?.irrelevant_sections}
               />
             </div>
           )}
