@@ -10,16 +10,20 @@ function App() {
   const [state, setState] = useState('input') // input | loading | results | error
   const [results, setResults] = useState(null)
   const [error, setError] = useState('')
+  const [jdText, setJdText] = useState('')
+  const [resumeText, setResumeText] = useState('')
 
-  const handleAnalyze = async (jdText, resumeText) => {
+  const handleAnalyze = async (jd, resume) => {
     setState('loading')
     setError('')
+    setJdText(jd)
+    setResumeText(resume)
 
     try {
       const response = await fetch(`${API_BASE}/api/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jd_text: jdText, resume_text: resumeText }),
+        body: JSON.stringify({ jd_text: jd, resume_text: resume }),
       })
 
       if (!response.ok) {
@@ -62,6 +66,8 @@ function App() {
     setState('input')
     setResults(null)
     setError('')
+    setJdText('')
+    setResumeText('')
   }
 
   return (
@@ -102,7 +108,7 @@ function App() {
         {state === 'loading' && <Loader />}
 
         {state === 'results' && results && (
-          <ResultsDashboard results={results} />
+          <ResultsDashboard results={results} jdText={jdText} resumeText={resumeText} />
         )}
 
         {state === 'error' && (

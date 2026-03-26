@@ -4,17 +4,50 @@ import GapAnalysis from './GapAnalysis'
 import NegativePoints from './NegativePoints'
 import Improvements from './Improvements'
 import OptimizedBullets from './OptimizedBullets'
+import GeneratedCV from './GeneratedCV'
 import './ResultsDashboard.css'
 
-function ResultsDashboard({ results }) {
+const API_BASE = 'http://localhost:8000'
+
+function ResultsDashboard({ results, jdText, resumeText }) {
   const [activeTab, setActiveTab] = useState('score')
+  const [cvMarkdown, setCvMarkdown] = useState('')
+  const [isGeneratingCV, setIsGeneratingCV] = useState(false)
+
+  const handleGenerateCV = async () => {
+    setIsGeneratingCV(true)
+    try {
+      const response = await fetch(`${API_BASE}/api/generate-cv`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jd_text: jdText,
+          resume_text: resumeText,
+          analysis_results: results,
+        }),
+      })
+
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.detail || 'CV generation failed')
+      }
+
+      const data = await response.json()
+      setCvMarkdown(data.cv_markdown)
+    } catch (err) {
+      alert('CV generation failed: ' + err.message)
+    } finally {
+      setIsGeneratingCV(false)
+    }
+  }
 
   const tabs = [
     { key: 'score', label: 'Score', icon: '📊' },
     { key: 'gaps', label: 'Gap Analysis', icon: '🔍' },
     { key: 'negatives', label: 'Weaknesses', icon: '⚠️' },
     { key: 'improve', label: 'Improvements', icon: '🚀' },
-    { key: 'bullets', label: 'Optimized Resume', icon: '✨' },
+    { key: 'bullets', label: 'Optimized Bullets', icon: '✨' },
+    { key: 'cv', label: 'Generate CV', icon: '📄' },
   ]
 
   return (
@@ -106,6 +139,16 @@ function ResultsDashboard({ results }) {
               <OptimizedBullets
                 bullets={results.optimized_bullets}
                 templateSuggestions={results.template_suggestions}
+              />
+            </div>
+          )}
+
+          {activeTab === 'cv' && (
+            <div className="tab-panel">
+              <GeneratedCV
+                cvMarkdown={cvMarkdown}
+                onGenerate={handleGenerateCV}
+                isGenerating={isGeneratingCV}
               />
             </div>
           )}

@@ -9,6 +9,7 @@ from pydantic import BaseModel
 import pdfplumber
 
 from analyzer import analyze_resume
+from cv_generator import generate_cv
 
 app = FastAPI(title="AI Resume Analyzer", version="1.0.0")
 
@@ -25,6 +26,12 @@ app.add_middleware(
 class AnalyzeRequest(BaseModel):
     jd_text: str
     resume_text: str
+
+
+class GenerateCVRequest(BaseModel):
+    jd_text: str
+    resume_text: str
+    analysis_results: dict
 
 
 @app.get("/api/health")
@@ -72,6 +79,26 @@ async def upload_resume(file: UploadFile = File(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF processing failed: {str(e)}")
+
+
+@app.post("/api/generate-cv")
+async def generate_cv_endpoint(request: GenerateCVRequest):
+    if not request.jd_text.strip():
+        raise HTTPException(status_code=400, detail="Job description cannot be empty")
+    if not request.resume_text.strip():
+        raise HTTPException(status_code=400, detail="Resume content cannot be empty")
+
+    try:
+        cv_markdown = await generate_cv(
+            request.jd_text,
+            request.resume_text,
+            request.analysis_results
+        )
+        return {"cv_markdown": cv_markdown}
+    except Exception as e:
+        logging.error(f"CV generation failed: {str(e)}")
+        logging.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"CV generation failed: {str(e)}")
 
 
 if __name__ == "__main__":

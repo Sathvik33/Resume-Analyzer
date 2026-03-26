@@ -1,0 +1,226 @@
+/* ===== Generated CV ===== */
+
+/* ===== Empty State ===== */
+.cv-empty {
+  text-align: center;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.cv-empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-xl);
+  background: var(--accent-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.cv-empty h3 {
+  font-size: 1.2rem;
+}
+
+.cv-empty-desc {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  max-width: 420px;
+  line-height: 1.7;
+}
+
+.generate-btn {
+  margin-top: 8px;
+  padding: 14px 36px;
+}
+
+/* ===== Generating State ===== */
+.cv-generating {
+  text-align: center;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.cv-gen-animation {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gen-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+}
+
+.cv-generating h3 {
+  font-size: 1.1rem;
+}
+
+.cv-generating p {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.gen-progress {
+  width: 280px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.gen-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent-gradient);
+  animation: progressFill 45s linear forwards;
+}
+
+@keyframes progressFill {
+  from { width: 0%; }
+  to { width: 95%; }
+}
+
+/* ===== Generated State ===== */
+.cv-generated {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cv-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cv-actions .btn-secondary {
+  padding: 10px 18px;
+  font-size: 0.8rem;
+}
+
+/* ===== CV Preview ===== */
+.cv-preview {
+  padding: 32px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.cv-content h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.cv-content h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-secondary);
+  margin-top: 20px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cv-content h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 14px;
+  margin-bottom: 6px;
+}
+
+.cv-content p,
+.cv-content strong {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.cv-content strong {
+  color: var(--text-primary);
+}
+
+.cv-content ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 6px 0;
+}
+
+.cv-content li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 4px;
+}
+
+.cv-content li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent-primary);
+  font-weight: bold;
+}
+
+.cv-content hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 16px 0;
+}
+
+/* ===== Raw Markdown ===== */
+.cv-raw-toggle {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.cv-raw-toggle summary {
+  padding: 12px 16px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cv-raw-toggle summary:hover {
+  color: var(--text-secondary);
+  background: var(--bg-card-hover);
+}
+
+.cv-raw {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+  margin: 0;
+}

@@ -17,7 +17,8 @@ def get_llm():
     return ChatOllama(
         model="qwen2.5:7b",
         temperature=0.1,
-        num_predict=4096,
+        num_predict=-1,
+        format="json",
     )
 
 
@@ -33,8 +34,9 @@ def build_chain():
 
 
 def extract_json(text: str) -> dict:
-    """Extract JSON from LLM response, handling markdown code blocks."""
+    """Extract JSON from LLM response, handling markdown code blocks and repairs."""
     logger.info(f"Raw LLM response (first 500 chars): {text[:500]}")
+    logger.info(f"Raw LLM response length: {len(text)}")
 
     # Try direct parse first
     try:
@@ -54,11 +56,53 @@ def extract_json(text: str) -> dict:
     start = text.find('{')
     end = text.rfind('}')
     if start != -1 and end != -1:
+        json_str = text[start:end + 1]
         try:
-            return json.loads(text[start:end + 1])
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON parse error: {e}")
+            return json.loads(json_str)
+        except json.JSONDecodeError:
             pass
+
+        # Repair: fix missing commas between key-value pairs
+        # Pattern: "value"\n\n  "key" → "value",\n\n  "key"
+        repaired = re.sub(r'"\s*\n(\s*)"', r'",\n\1"', json_str)
+        # Pattern: ]\n  "key" → ],\n  "key"
+        repaired = re.sub(r'\]\s*\n(\s*)"', r'],\n\1"', repaired)
+        # Pattern: }\n  "key" → },\n  "key"
+        repaired = re.sub(r'\}\s*\n(\s*)"', r'},\n\1"', repaired)
+        try:
+            return json.loads(repaired)
+        except json.JSONDecodeError as e:
+            logger.error(f"Repaired JSON still failed: {e}")
+
+    # Last resort: try to fix truncated JSON by closing brackets
+    if start != -1:
+        json_str = text[start:]
+        # Count open/close brackets
+        open_braces = json_str.count('{')
+        close_braces = json_str.count('}')
+        open_brackets = json_str.count('[')
+        close_brackets = json_str.count(']')
+
+        # Try to close truncated JSON
+        # First, fix any trailing incomplete string
+        json_str = re.sub(r',\s*$', '', json_str)  # remove trailing comma
+        json_str = re.sub(r'"[^"]*$', '""', json_str)  # close incomplete string
+
+        # Add missing closing brackets
+        json_str += ']' * (open_brackets - close_brackets)
+        json_str += '}' * (open_braces - close_braces)
+
+        # Also repair commas
+        json_str = re.sub(r'"\s*\n(\s*)"', r'",\n\1"', json_str)
+        json_str = re.sub(r'\]\s*\n(\s*)"', r'],\n\1"', json_str)
+        json_str = re.sub(r'\}\s*\n(\s*)"', r'},\n\1"', json_str)
+
+        try:
+            result = json.loads(json_str)
+            logger.warning("Parsed truncated/repaired JSON successfully")
+            return result
+        except json.JSONDecodeError as e:
+            logger.error(f"Truncation repair failed: {e}")
 
     raise ValueError(f"Could not extract valid JSON from LLM response. Response starts with: {text[:200]}")
 
